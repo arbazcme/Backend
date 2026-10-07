@@ -39,8 +39,7 @@ ServerSocket server = new ServerSocket(8080);
   * PUT  → doPut()
   * DELETE → doDelete()
 
-![Servlet container and servlets](images/servletcontainer.png)
-
+<img src="images/servletcontainer.png" width="500">
 
 ## Problems and Need for Spring Framework
 
@@ -61,7 +60,6 @@ This is Opinionated system (provides default config), This is build upon the ser
 * from Dispatcher Servlet the request enters Spring MVC.
 * some other sevlets like default servlet for static (HTML, CSS) files and custom servlets etc.
 
-![Spring Boot Simple Architecture](images/spring.png)
-
+<img src="images/spring.png" width="500">
 
 
