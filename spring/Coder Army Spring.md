@@ -119,3 +119,83 @@ Load is further reduced for Reverse proxies with load balancer and no need for e
 
 ## Client server detailed 
 <img src="images/clientserver2.png" width="500">
+
+## JAR (Java Archives)
+uses similar to zip files and bundles java .class files, Images/Resources, metadata  
+like mainfest.mf which tells entry point of jar file  
+```java
+java -jar file.jar
+```
+
+## Artifact 
+Final packaged file produced after build phase of an application, that can be used, shared or deployed
+
+## Library JAR vs application JAR
+Library Jar is not executable in itslelf and generally does not contain the dependency jars installed, maven have to install from its pom.xml which maven does when we press sinc button. (resolve transitive dependencies)  
+
+Application JAR is executable and contains/bundles all library JARS with it.its complete.
+it Has all library jars bundled and independently executable. 
+
+
+## Maven
+
+Tool which we can manage Java/Spring Projects, Downloading of dependencies, Transitive Dependencies, Providing lifecycle of project, 
+which includes the processes in all phases like verify,compile etc.  
+
+Reduces manual effort of maintaining project
+
+## Plugin
+is Code that maven uses to perform some functionality 
+
+## What is Build phase in maven Life cycle 
+Entire process of Lifecycle is build phase which maven automates and we get target folder as a result which has .class files and .jar file
+
+## Phases 
+```text
+clean -> independent phase used to clear target folder that contains .class and/or .jar (previous build phase result),
+tip -> we generally combine and use clean initially "mvn clean install" like wise
+Validate -> Checks the structure and checks weather the pom file is valid or not  
+Compile -> compiles the java code   
+Test -> unit tests  
+Package -> Process of converting your application code into .jar file, bundling it, Distributable format 
+verify -> integration Tests 
+install -> save in local repository the M2 Folder
+Site -> some documentation related
+Deploy -> to central or remote repository
+```
+
+## pom.xml (Super, Parent, effective)
+Maven uses pom.xml file as this file contains all dependencies, plugins, meta data of project  
+Super -> parent of all pom files contains default configurations  
+Parent -> The immediate parent pom.xml from where you are inheriting   
+Effective -> the effective configurations of pom.xml code from all the chain from super pom to your pom.xml  
+
+
+## How Maven searches for a Jar (Local Repository, Remote, Maven Central Repository)
+First checks in local computer inside /M2 folder basically the cached jar files if not found here it eaither searches in Remote if specified if the code belongs to some organization or maven central where all repositories are published.
+
+## Maven Archtypes 
+its maven templates of projects for a quick start. 
+
+
+## Tightly Coupled Design
+* Insted of maintaining abstraction you specify details in our code i.e Not coding for interfaces
+* When one part of code is changed the other part is also forced to change (Tight coupling) 
+* Harder to maintain, code breakage risk is high.
+* As some services are costly to test we create simple test services which also require to be changed in Tightly coupled system
+
+
+* Better way of Dependency injection is constructor injection (java) were just main func has the control and Tight coupling is reduced.
+* so Tight coupling is reduced not eliminated, so comes concept of IOC and Beans
+
+## Inversion of control 
+* We (spring core) is taking the control from main, eliminating tight coupling and it manages objects and injects where ever necessary
+* so control is in IOC container now which passes dependencies to services.
+* before the control stays inside main, now IOC container does all by maintaining beans (i.e creation of dependencies, lifecycle of dependency object, configuring dependencies of dependencies)
+* This is called IOC, Using IOC + DI + coding for interfaces we can eliminate tight coupling 
+
+## Loose coupling 
+* Maintaing Abstraction i.e coding for inrterfaces so that code is following solid principles.
+* Easier Unit testing, No changes in src code required for change of features
+
+
