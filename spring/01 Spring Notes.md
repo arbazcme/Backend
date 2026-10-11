@@ -199,3 +199,36 @@ its maven templates of projects for a quick start.
 * Easier Unit testing, No changes in src code required for change of features
 
 
+## Java Reflection API i.e Using <class_name>.class in spring code
+
+This is used where Spring has to manage object. it should have all the details of class, so passing object is not useful to get all the class information, so special object of `Class` Type is used. so that Spring has all the information, also used in Exception catching in @ExceptionHandler
+```java
+Base Syntax
+Class<AppConfig> config = Appconfig.class
+```
+
+This is one of thing that internally may happen when we do SpringApplication.run(AppConfig.class, args);  
+`ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class)`  
+
+
+## @Configuration Annotation 
+For IOC container first it goes to class with @Configuration, @ComponentScan (good, when we mention path as well) Happens and All the classes with @RestController, @Service, @Component it creates beans and then @Beans mentioned in the class are added to IOC container.  
+
+In Conflict of spring bean from component scan spring chooses from AppConfig (What we describe has priority).
+Only When it matches exactly i.e the Bean name and Component Class name and return types.  
+
+@Qualifier, @Primary, @ConditionalOnProperty are used to help spring to choose bean when there are more than one of it in IOC.  
+
+primary and qualifier helps in picking one from container where @ConditionalOnProperty if used everywhere only one bean would be maintained in container in first place.  
+
+
+## Steps from Start of Application To spring beans creation 
+1. Start the spring Container (Ioc container)
+2. Spring reads the class with @Configuration (AppConfig.java mostly)
+3. Spring processes @ComponentScan
+4. Spring finds @Components, @Services, @RestController
+5. Spring creates Bean Definitions (Maintaines Meta data, bean name, class, scope, dependencies) (Spring has to maintain bean as well so this step is necessary, later bean is created)
+6. Spring starts creates beans
+
+
+
