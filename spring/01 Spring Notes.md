@@ -230,5 +230,159 @@ primary and qualifier helps in picking one from container where @ConditionalOnPr
 5. Spring creates Bean Definitions (Maintaines Meta data, bean name, class, scope, dependencies) (Spring has to maintain bean as well so this step is necessary, later bean is created)
 6. Spring starts creates beans
 
+## AppConfig is also a bean
+
+```java
+@Configuration
+@ComponentScan
+class AppConfig{
+ @Bean
+ public User getUser(){
+  return User(20, "Arbaz");
+ }
+}
+```
+In order to call the functions and get the objects AppConfig should also be a spring managed object
+@Configuration is internally having @Component, Class meta data is also passed (AppConfig.class) and Bean as well. 
+
+
+## Circular Dependency 
+
+This is a state arises when there is circular chain of dependencies are there.  
+**Spring when used with Constructor injection:**  
+<img src="images/circulardependency.png" width="500">
+Not possible and Exception of `BeanCurrentlyInCreationException` because at the time of creation we need the dependency object
+
+**Spring when used with Field or Setter injection:**
+This can be possible because, consider A <-> B circular dependency the steps would be 
+1. Create Partial object A without any dependency injection
+2. Finds B is required so Creates partial B object
+3. Finds A is required and partial A object (which is present) is injected to B making it complete
+4. The Complete B object is injected to A making A complete
+
+Circular Dependency can be resolved in spring core, but highly discouraged in spring boot and in default
+`spring.main.allow-circular-references=false` configuration so its not allowed until its changed.  
+
+Circular dependency existence means violation of Single responsibility principle and wrong design approch is used. some class is taking responsibility that is shouldnot take, and should properly break down.
+
+Although there are methods to resolve, Circular dependency should not exist in the first place.
+
+## Singleton scope in Spring
+* Same Reference is passed (default no need of @Scope("singleton")) from context.getBean(X.class) or Dependency injection. 
+* Note : One initial object is created at beginning regardless of any dependency. 
+* Uses Eager Initialization
+
+## Prototype scope in spring
+* New Reference (Object) is passed when @Scope("prototype") eaither from .getBean() or Dependency injection.  
+* Note : No initial object is created. Creates new when ever requested from .getContext or Dependency injection.
+* Uses Lazy Initialization
+
+
+## Important Fact on Singleton pattern (single per class) vs Singleton Scope (single per bean definition)
+```java
+@Configuration
+public class AppConfig {
+    @Bean
+    public OrderService order1() {
+        return new OrderService();
+    }
+    @Bean
+    public OrderService order2() {
+        return new OrderService();
+    }
+}
+```
+Every bean definition has a Bean, here order1, order2 different bean names lead to different bean definitions.  
+so 2 Beans of OrderService may exist in IOC container, with different definitions with same Return type (just to make sure you remember that still the Some [Qualifier, primary] annotation should be used because even if they are different definitions of beans, conflict of which bean to pass in DI or .getBean() is still there).
+
+## Singleton vs Prototype prefered way
+
+* Singleton -> stateless (service/feature/functionality that dosent depend on state (i.e data) and task oriented)
+* Prototype -> stateful (Service which remembers a state) 
+
+## Bean Initilizations
+* Singleton -> Eager Initilization (default initilization)
+ * whenever Application is up, beans are created. 
+* Prototype -> Lazy Initilization (default initilization)
+  * whenever we ask weather from .getContext() or DI then its created.
+
+Singleton can become Lazy with @Lazy annotation  (Creation of single bean can be at start of app (Eager) or when required (Lazy))
+Prototype cannot be Eager (Why to create when application is up when new object is passed everytime no sense)
+
+
+## When Eager can force Lazy beans to be created
+
+```java
+// default singleton
+class UserService(){
+  UserService(PaymentService paymentService){}
+}
+
+@Lazy
+class PaymentService{}
+```
+This forces lazy to be created as Eager initilization demands, but the UserService is not used yet.
+
+### Optimization 
+```java
+class UserService(){
+  UserService(@Lazy PaymentService paymentService){}
+}
+```
+Proxy of user is added (Not actual User but a dummy) and when actual demand comes from service the lazy is created. 
+
+
+## Note
+when lazy just over payment service its useless because Eager in order service makes demand at the beggining itself, lazy in just parameter is also useless because the bean is created anyway and proxy object is still added no optinmization but breaks circular dependency (discussed below), so both Lazy makes sense.
+
+### More Formally
+Class-level @Lazy delays automatic creation; parameter-level @Lazy delays resolution at the injection point. Together, they let the dependent singleton start without forcing the lazy bean to be created
+
+
+### Proxy definition here
+* A middlman that helps not to force Lazy and not to disturb the constructor DI. when something tries to access proxy, then demand comes.
+* when something tries to call proxyObj.someMethod it internally does .getBean() creating demand there and gets Bean.
+* so proxy is also a dummy implenmentation of interface and placed there (lightweight implementation )
+
+
+### `spring.main.lazy-initilization = true` 
+Every thing is Lazy, all the beans and whichever i want not to be lazy i do @Lazy(value = false)
+
+
+## How Lazy resolves Circular Dependency 
+
+Assuming 2 Classes, A and B. Circular dependency.
+```java
+class A{
+ A(B obj) {...}
+}
+
+class B{
+ B(A obj) {...}
+}
+```
+
+### with @Lazy
+```java
+class A{
+ A(@Lazy B obj) {...}
+}
+
+// placing @Lazy here, will create only when required injects A's Object with B's proxy as dependency
+// Not placing @Lazy here, A bean is created first with B's proxy and B gets that dependency and B is created Eager-ly.
+class B{
+ B(A obj) {...}
+}
+```
+
+
+### Images for clarification 
+Initiall relation
+* if B is Lazy -> B is created when A's Proxy B is invoked. and Resolves immediately
+* not Lazy -> as A is now independent with B's proxy, B is created with A's Bean.
+  * only when A invokes Proxy B that resolves into already present B's Bean.
+<img src="images/cd1.png" width=500>
+<img src="images/cd2.png" width=500>
+<img src="images/cd3.png" width=500>
 
 
