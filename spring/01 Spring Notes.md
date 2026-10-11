@@ -381,8 +381,8 @@ Initiall relation
 * if B is Lazy -> B is created when A's Proxy B is invoked. and Resolves immediately
 * not Lazy -> as A is now independent with B's proxy, B is created with A's Bean.
   * only when A invokes Proxy B that resolves into already present B's Bean.
-<img src="images/cd1.jpeg" width=500>
-<img src="images/cd2.jpeg" width=500>
-<img src="images/cd3.jpeg" width=500>
+<img src="images/c1.jpeg" width=500>
+<img src="images/c2.jpeg" width=500>
+<img src="images/c3.jpeg" width=500>
 
 
