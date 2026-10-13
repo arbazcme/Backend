@@ -386,3 +386,74 @@ Initiall relation
 <img src="images/c3.jpeg" width=500>
 
 
+## Bean Life Cycle (General Singleton and Eager)
+
+```text
+ IOC Container Starts
+         |
+ Read Configuration
+         |
+ Read Bean Definitions                     Bean Definition:
+         |                                 BeanName: orderService 
+ Instantiate/Create Objects                BeanClass: OrderService 
+         |                                 Scope: Singleton
+ Dependencies are Injected                 lazy: false
+         |                                 dependencies: paymentService 
+ Aware Interfaces are called              
+         |                                 Aware Interfaces for Logging BeanNameAware, ApplicationContextAware
+ Initilization Callbacks         
+         |                                  Initilization Callbacks (With Order of chronology):
+    Bean is Ready                           1. @PostConstruct 
+         |                                  2. InitilizingBean (Interface)
+   Destruction Callbacks                    3. Init Method upon @Bean
+         |
+   Bean is Destroyed                       Destruction Callbacks (With Order of chronology):
+                                            1. @PreDestroy
+                                            2. DisposableBean  
+                                            3. destroy Method 
+```
+
+### Why not use Constructor insted @PostConstruct  
+Becuase we dont have Eough Information At creation phase, Later all the dependencies are injected we have all the information  
+@AutoWired, @value etc.
+### Constructor DI can solve this same right then?  
+its prefered to keep constructor Lightweight and bean creation lightweight. so @PostConstruct is used. 
+
+
+## Lazy In singleton and Prototype bean Lifecycle
+Lazy in singleton is exactly same but the object creation is upon demand of any other dependency or .getBean() call  
+
+### Prototype Bean Lifecycle  
+```text
+ IOC Container Starts
+         |
+ Read Configuration
+         |
+ Read Bean Definitions                      
+         |                                 
+ Instantiate/Create Objects    (Assuming there is demand for the creation)
+         |                                
+ Dependencies are Injected                 
+         |                                
+ Aware Interfaces are called              
+         |                                  
+ Initilization Callbacks         
+         |
+ Object is handover to client    Why? To save from Memory leaks.  
+```
+
+### Memory Leak
+Memory which is reachable but not needed by the program.  
+If its not even reachable its candidate for Garbage Collector.
+
+### Bean Initialization in Prototype
+Container Management: Spring manages the creation, dependency injection, and initialization of prototype beans, but does not manage their destruction.
+
+The Catch: Once Spring hands a prototype bean over to the client, it discards its reference. Because of this, destruction callbacks (@PreDestroy, DisposableBean) are never called by the IoC container. If a prototype bean holds open connections or heavy resources, the client code must clean them up explicitly to prevent memory leaks.
+
+### Memory Leaks handling
+To prevent memory leaks in Java / Spring Boot:
+1. Remove unused references: map.remove(id) when you're done with an object.
+2. Close resources: Use try-with-resources for files, streams, and other AutoCloseable resources.
+3. Limit collections and caches: Don't store objects forever without a reason.
+4. Clean up listeners and ThreadLocal values when they are no longer needed.
