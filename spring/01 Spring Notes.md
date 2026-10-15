@@ -457,3 +457,81 @@ To prevent memory leaks in Java / Spring Boot:
 2. Close resources: Use try-with-resources for files, streams, and other AutoCloseable resources.
 3. Limit collections and caches: Don't store objects forever without a reason.
 4. Clean up listeners and ThreadLocal values when they are no longer needed.
+
+
+## XML based definition and configuration of beans
+
+now in this we will maintain a .xml file that holds all the beans
+
+this File say `beans.xml` is placed in `src/main/resources`
+
+```text
+
+<beans xmlns="...">
+
+<bean id="BeanNameHere"  class="com.arbaz.OrderService"> </bean>
+<bean id="orderService" class="in.strikes.OrderService">
+    <constructor-arg ref="paymentService"/> // Constructor Injection "ref" -> pass bean to it
+    <constructor-arg value="10"/> // Constructor Injection  of actual value "val" -> pass exactly the value
+</bean>
+
+</beans>
+```
+
+Using Bean name for getting a bean resolves the conflict, Multiple beans of same type.  
+`id or name in <bean name="nameOfBean" primary="true"> </bean>`  
+`BeanType bean = context.getBean("nameOfBean", BeanType.class)`   
+There is primary property as well.   
+
+## Setter Inhectiom of Dependencies
+```text
+
+<bean id="orderService" class="in.strikes.OrderService">
+<property name="propertyNameInClass" ref="NameOfBeanToInject"></property> // Based on property name say orderService
+// then setOrderService() method is used to inject by spring  and injects bean specified
+</bean>
+```
+
+
+## Autowiring in XML 
+```text
+<bean id="orderService" class="in.strikes.OrderService" autowire="byType or byName or constructor"> 
+</bean>
+
+ByName -> Based on Field Name the Bean Name is injected
+ByType -> Based on Field Type works when there is only one bean
+constructor -> Based on params passed in constructor the beans are injected accordingly
+
+```
+
+## Init and Destroy in Beans
+`<bean name="orderService" scope="singleton" class="dev.arbaz.OrderService" init-method="methodName" destroy-method="destMethod"></bean> `
+
+### Spliting Up XML config file
+
+```text
+orderBean.xml
+<beans xmlns="...">
+<bean id="BeanNameHere"  class="com.arbaz.OrderService"> </bean>
+<bean id="orderService" class="in.strikes.OrderService">
+    <constructor-arg ref="paymentService"/>  
+</bean>
+</beans>
+```
+```text
+paymentBean.xml
+<beans xmlns="...">
+<bean id="BeanNameHere"  class="com.arbaz.PaymentService"> </bean>
+<bean id="PaymentService" class="in.strikes.PaymentService">
+</bean>
+</beans>
+```
+```text
+
+beans.xml
+
+<beans xmlns="...">
+  <import resource="paymentBean.xml">
+  <import resource="OrderBean.xml">
+</beans>
+```
