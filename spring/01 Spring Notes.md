@@ -458,6 +458,33 @@ To prevent memory leaks in Java / Spring Boot:
 3. Limit collections and caches: Don't store objects forever without a reason.
 4. Clean up listeners and ThreadLocal values when they are no longer needed.
 
+### Circular Dependency resolving using @PostConstruct
+
+We Simply use Getters and setters say in class A, in A <-> B circular dependency  
+A object is created before B without passing B as dependency,as A is created B is also created.  
+in @PostConstruct of B, we will call setters passing the curr obj that is `this` so that A gets B (its dependency)
+
+
+```java
+
+class A{
+  private B obj;
+  A() {}
+  void setB(B b){this.obj = b;}
+}
+
+class B{
+ private A a;
+ B(A a){
+  this.a = a;
+ }
+ @PostConstruct
+ void resolve(){
+  a.setB(this);
+ }
+}
+```
+
 
 ## XML based definition and configuration of beans
 
@@ -487,11 +514,10 @@ There is primary property as well.
 ```text
 
 <bean id="orderService" class="in.strikes.OrderService">
-<property name="propertyNameInClass" ref="NameOfBeanToInject"></property> // Based on property name say orderService
-// then setOrderService() method is used to inject by spring  and injects bean specified
+<property name="setterMethodName without prefix set" ref="NameOfBeanToInject"></property>   
 </bean>
 ```
-
+This will automatically call the setter with passing the dependency.
 
 ## Autowiring in XML 
 ```text
@@ -535,3 +561,86 @@ beans.xml
   <import resource="OrderBean.xml">
 </beans>
 ```
+
+## Spring core to Spring boot
+
+1. No need for Specifiying version in dependencies as some dependencies will work upon some version of another dependency
+   * Spring Boot's parent pom's will have all the configurations of dependency version <-> another dependency version, so this is no longer an issue.
+2. Further Boiler code is reduced (Application context creation)
+3. @EnableAutoConfiguration this will automatically configure 
+   * looks at project, create which ever bean is required by the project (Below explained more clearly)
+5. @SpringBootConfiguration is simply a special @Configuration tag of spring that tells main config class ( we can make beans in main class)
+
+### How @EnableAutoConfiguration Works
+
+There are lot of config classes in spring boot with 
+```java
+@AutoConfiguration
+class A{}
+```
+There are lot of most used dependencies like spring mvc, spring data, for all of them bean configurations are already created so @EnableAutoConfiguration makes @AutoConfiguration work so that beans are created from those classes as well.   
+Spring boot can understand the project through application.properties and use internal beans of @AutoConfiguration classes for configurations.   
+
+Configuration of tomcat server, database connection configuration all are handled by spring boot.  
+Spring boot can understand the project further form say application.properties say we give key value of database
+it does database connection configuration automatically 
+
+### some other Annotations
+* @ConditionalOnClass - in @AutoConfiguration class we also use this below and pass .class, reflection that tells only if this X dependency is there only then create the beans mentioned inside class
+* @ConditionalOnMissingBean - when bean of this type is not available then create.(say user created already in AutoConfigure then no need) 
+
+Example:
+```java
+@AutoConfiguration
+@ConditionalOnClass(webstarter.class) // when this dependeny is present only then create these beans
+class webStarterConfigs{
+  @Bean
+  @ConditionalOnMissingBean
+  method....
+}
+```
+
+
+### ways to pass data to Java Program 
+* application.properties file
+* application.yaml
+* environment variables
+* command line args
+* system properties (idk)
+
+
+### @Value 
+we can inject value from above ways.
+example 
+```java
+@Value("${app.max-retry:3}")  // : and after is default value
+private int maxRetry;
+```
+
+### @ConfigurationProperties
+We pass a prefix and variables are matched from canonical to camel case
+
+say in application.properties we have 
+```text
+payment.name="razorpay"
+payment.type-of-payment="online"
+payment.timeout=200
+```
+in class we have
+```java
+@Component
+@ConfigurationProperties("payment") //prefix
+class PaymentProperties{
+    private String name;
+    private String typeOfPayments;
+    private int timeout;
+   // Getters as this is a props class, we use another wrapper class so.
+}
+```
+
+### CommandLineRunner And ApplicationRunner
+when we have to do some task after application is ready.
+
+why not main ?  
+* Application context is not ready, main starts spring. Runners start logic after beans are created.
+* Makes Tight coupling problem if we manually take out beans from IOC container, Not a good practise.
