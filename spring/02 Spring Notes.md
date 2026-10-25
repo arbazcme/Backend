@@ -162,12 +162,13 @@ First paste the .war packaged app into /webapps and New folder is automatically 
 * For logs as well, open Terminal navigate to the above path (use cd "Program Files/" use " ") and run ./bin/startup.bat or ./bin/shutdown.bat
 
 
-### Purpose of Dispatcher Servlet 
+## Purpose of Dispatcher Servlet 
 
-Servlet container does a lot of work to reduce boiler plate, Tightly coupled code. Why a seperate dispatcher bw servlet and its container?  
+Servlet container does a lot of work to reduce boiler plate, Tightly coupled code. Why a seperate dispatcher servlet, why not just put in Tomcat itself ?  
 
 * Some times when parsing request or generating response you might need to interact with spring.
-* Example for that is say form HTTPServletRequest converting request body to object it needs Jackson bean.
+* Example for that is say form HTTPServletRequest To directly provide in parameters of spring.
+*  converting request body to object it needs Jackson bean (understand spring auto configured beans and normal as well).
 * Spring placed a dispatcher servlet and introduced controllers.
 
 <img src="images/dispatcher_servlet.png">
@@ -180,3 +181,6 @@ Servlet container does a lot of work to reduce boiler plate, Tightly coupled cod
 * Dispatcher servlet -> {HttpServletReq to Object via beans, invoking methods by understanding @Annotations, generating JSON response body etc} so that it can understand spring code. and seperate of concerns and Embedded tomcat need not to take care of this.
 
 So its like evolution from servlets and servlet container to servlet container -> dispatcher servlet -> controller/service beans.
+
+dispatcher servlet makes the tranistion from HttpServletRequest and same for response as well to accessable in parameters directly of spring mvc, understands beans cuz it creates json request body to java object via jackson bean which is i guess a autoconfigured bean in spring boot, it handles routing as before it was sevlet routing just to a class, now based on base route of bean class and route of methods, Dispatcher servlet can select bean. it can understand spring code of annotations thats the reason this functionality is seperate from tomcat server , seperate of concerns , validations as well and exceptions as well when validation fails.This is the reason this are all handled here i.e Dispatcher Servlet.
+
