@@ -250,7 +250,7 @@ In order to call the functions and get the objects AppConfig should also be a sp
 
 This is a state arises when there is circular chain of dependencies are there.  
 **Spring when used with Constructor injection:**  
-<img src="images/circulardependency.png" width="500">
+<img src="images/circulardependency.png" width="500">  
 Not possible and Exception of `BeanCurrentlyInCreationException` because at the time of creation we need the dependency object
 
 **Spring when used with Field or Setter injection:**
@@ -510,7 +510,7 @@ Using Bean name for getting a bean resolves the conflict, Multiple beans of same
 `BeanType bean = context.getBean("nameOfBean", BeanType.class)`   
 There is primary property as well.   
 
-## Setter Inhectiom of Dependencies
+## Setter Injection of Dependencies
 ```text
 
 <bean id="orderService" class="in.strikes.OrderService">
@@ -643,4 +643,5 @@ when we have to do some task after application is ready.
 
 why not main ?  
 * Application context is not ready, main starts spring. Runners start logic after beans are created.
-* Makes Tight coupling problem if we manually take out beans from IOC container, Not a good practise.
+* insted of doing the start up in main, and using .getContext() to manage Dependency injection of beans in main, which might introduce Tight coupling we use CommandLineRunner. for start up tasks.
+* So technically its not tight coupling we are just not following IOC so thats the reason its bad. IOC is there to take out tight coupling if we donot follow it it might introduce Tight coupling
