@@ -52,6 +52,7 @@ For Soft delete + pagination in Repository layer
 ```java
 Page<Student> findByIsDeletedFalse(Pageable pageable); // isDeleted is Boolean in Entity
 ```
+Rule of thumb is use JPA Naming as you were using before, To introduce pagination just pass Pageable class in parameter in Spring JPA Repository.
 
 For Configuration in application.properties for default and max page size
 ```text
@@ -102,6 +103,26 @@ We can deploy more than one application in external tomcat and to communicate th
 * Then destroy() is called similar to @PreDestroy
 
 ### Simple code Example for Servlets 
+
+```text
+In pom.xml,
+
+<packaging>war</packaging>
+
+<build> <!--  As Name is hectic use this for deploying in Tomcat. -->
+    <finalName>servlets</finalName>
+</build>
+
+Tomcat 9 or below
+<dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+</dependency>
+Tomcat 10 or above You can use Jakarta Servlet API from MVN repo.
+```
+
 
 ```java
 package dev.arbaz;
