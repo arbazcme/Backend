@@ -184,3 +184,46 @@ So its like evolution from servlets and servlet container to servlet container -
 
 dispatcher servlet makes the tranistion from HttpServletRequest and same for response as well to accessable in parameters directly of spring mvc, understands beans cuz it creates json request body to java object via jackson bean which is i guess a autoconfigured bean in spring boot, it handles routing as before it was sevlet routing just to a class, now based on base route of bean class and route of methods, Dispatcher servlet can select bean. it can understand spring code of annotations thats the reason this functionality is seperate from tomcat server , seperate of concerns , validations as well and exceptions as well when validation fails.This is the reason this are all handled here i.e Dispatcher Servlet.
 
+### Scope Provided in dependency in pom.xml
+
+We use classes like 
+* HttpServlet
+* HttpServletRequest & Response
+
+These are already provided by the runtime tomcat, Use for compilation . so dont add these in final .war packaging because environment will provide it.  
+
+`<scope>provided</scope>`  
+
+Maven uses default scope compile. it packages Jakarta Servlet API (Tomcat 10 or above) inside final war.  
+
+Now because there are 2 copies exist of servlet api one in tomcat/lib and one in app.war this creates class loading conflicts or runtime issues.  
+
+In container based applications the container should provide the API's and not packaged by application
+
+### Servlet Lifecycle
+* Servlet is created upon the first request arrival init() (This is default behaviour) and later on service() which maps to doGet() etc.Finally destroy(). 
+* Their idea maps to spring
+* init() -> @PostConstruct
+* destroy() -> @PreDestroy
+
+### Usage of servlets
+
+Servlets are created once and reused. we should be careful with the instance variables inside servlets, when multiple users are sending requests.
+
+### Embedded Tomcat
+We get embedded in spring-boot-starter-web dependency, when we do `SpringApplication.run(App.class, args)`
+
+ * main() starts
+ * Spring boot starts (IOC container etc)
+ * Embedded Tomcat server starts and app is ready
+ 
+ ### Spring MVC idea
+* Request reading, response writing (from HttpServletRequest), Validation, Routing to correct method (understand spring annotations @GetMapping etc...), Error Handling and business flow of controllers <-> service starts. Repitive tasks are handled and one servlet is used.
+* so writing servlet code was harder so dispatcher reduced that and spring mvc better cleaner framwork, some architectural changes made that were necessary with dispatcher servlet. routing to methods insted of class + service methods like doGet() etc
+
+### Major changes from servlets to spring MVC
+* Dependency Injection (Major problem of Tight coupled code)
+* routing to methods directly from dispatcher servlet
+* HttpservletRequest to params and parsing req body
+* Validation in dispatcher servlet and when fails then exception raising
+* generating JSON response from Java Objects 
