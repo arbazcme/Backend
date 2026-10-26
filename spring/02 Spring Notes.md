@@ -184,6 +184,12 @@ So its like evolution from servlets and servlet container to servlet container -
 
 dispatcher servlet makes the tranistion from HttpServletRequest and same for response as well to accessable in parameters directly of spring mvc, understands beans cuz it creates json request body to java object via jackson bean which is i guess a autoconfigured bean in spring boot, it handles routing as before it was sevlet routing just to a class, now based on base route of bean class and route of methods, Dispatcher servlet can select bean. it can understand spring code of annotations thats the reason this functionality is seperate from tomcat server , seperate of concerns , validations as well and exceptions as well when validation fails.This is the reason this are all handled here i.e Dispatcher Servlet.
 
+
+### Why Dispatcher servlet and Controllers and why not dispatcher servlet to servlets
+why servlets were reduced to dispatcher and controllers were used ? becase of their structure how they accept HttpServletRequest , the problem will still be there of converting from HttpServletReq <-> java obj and java obj <-> HttpServletResponse and validations so further dispatcher servlet and controllers were introduced insted of dispatcher servlet to servlets  
+
+Through controllers, the work done by dispatcher makes controllers lighther. 
+
 ### Scope Provided in dependency in pom.xml
 
 We use classes like 
@@ -207,7 +213,6 @@ In container based applications the container should provide the API's and not p
 * destroy() -> @PreDestroy
 
 ### Usage of servlets
-
 Servlets are created once and reused. we should be careful with the instance variables inside servlets, when multiple users are sending requests.
 
 ### Embedded Tomcat
@@ -227,3 +232,38 @@ We get embedded in spring-boot-starter-web dependency, when we do `SpringApplica
 * HttpservletRequest to params and parsing req body
 * Validation in dispatcher servlet and when fails then exception raising
 * generating JSON response from Java Objects 
+
+
+## Spring MVC 
+This is actual web framework that uses spring core To Manage web applications, core spring gives Base framework, the ideology.  
+@Beans, Dependency Injection, IOC container and Spring MVC gives extra functionality for web apps like, @Controllers, @Service, and web related functionality.  
+
+<img src="images/springmvc.png" width="500">
+
+You can build everything using only servlets but the boilerplate of class UserServlet { doGet(HttpServletRequest,HttpServletResponse) etc.} to eliminate this servlets and insted controllers are used.
+
+### Handler Mapping 
+ * handler mapping it scans all beans and their annotatiions, creates route to method mapping and helps dispatcher servlet to call correct bean.  
+<img src="images/handlermappinhg.png" width="500">
+
+### Data is extracted/resolved in requests
+* Request Body is extracted by dispatcher servlet via Jackson Library JSON <-> java object mapping and provides controllers.
+* Query Params are Extracted by tomcat and placed inside HttpServletRequest dispacther servlet provides controller from there.
+* Path Variable While HandlerMapping Lookup by dispatcher servlet for Route the dynamic variable is mapped with req value and controllers can access.
+
+
+From creating of HttpservletRequest from raw string by tomcat, Later Dispatcher servlet takes those objects gets method mapping and resolution values from HandlerMapping for @Path variable. it can do like use jackson to convert json <-> java object later validations and exceptions as well, the dispacther servlet Fills the required arguments of controllers.  
+<img src="images/springworkflow.png" width="700">
+
+### Request Flow and Response Flow
+
+### Client to Controller
+* Tomcat parses HTTP request to HttpServletRequest (request body is still a stream)
+* Dispacher servlet convert the stream request body to Java Obj via jackson, Finds method from Handler Mapping (Here @Path Variable is resolved in path matching, @ Req params is already done by tomcat inside HttpServletRequest) and invokes the controller method with passing arguments
+* Handler Mapping Finds The matching method, and spring mvc'c component resolves the @RequestParam (even its there in HttpServletReq) and @PathVariable is identified in handler mapping but resolved by spring mvc to params of controller.
+* Controller recieves through parameters
+
+### Controller to client
+* Controller : We generally return a ResponseEntity which has Statuscode, headers, body (Java Obj)
+* Dispatcher Servlet : Converts That Java Object to JSON (with spring mvc components coordination i.e jackson) +  headers + status code placed in HttpServletResponse
+* Tomcat Sends HTTP Response from HttpServletResponse Object.
