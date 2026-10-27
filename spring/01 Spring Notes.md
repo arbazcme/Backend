@@ -182,17 +182,15 @@ its maven templates of projects for a quick start.
 * Insted of maintaining abstraction you specify details in our code i.e Not coding for interfaces
 * When one part of code is changed the other part is also forced to change (Tight coupling) 
 * Harder to maintain, code breakage risk is high.
-* As some services are costly to test we create simple test services which also require to be changed in Tightly coupled system
-
-
-* Better way of Dependency injection is constructor injection (java) were just main func has the control and Tight coupling is reduced.
-* so Tight coupling is reduced not eliminated, so comes concept of IOC and Beans
+* As some services are costly to test we create simple test services. In Tightly coupled system the code breaks again as we have to change the classes from Original to Dummy.
+* Better way of Dependency injection is constructor injection (java) because we can use final keyword and dependencies are at time of creation (Easy Detection of circular dependency).
 
 ## Inversion of control 
-* We (spring core) is taking the control from main, eliminating tight coupling and it manages objects and injects where ever necessary
+* It manages objects and injects where ever necessary.
 * so control is in IOC container now which passes dependencies to services.
 * before the control stays inside main, now IOC container does all by maintaining beans (i.e creation of dependencies, lifecycle of dependency object, configuring dependencies of dependencies)
 * This is called IOC, Using IOC + DI + coding for interfaces we can eliminate tight coupling 
+* If the Control (creation and configuring its dependency, destroy) is in say controller Tight coupling is introduced there, if in main then Tight coupling will be introduced in main so IOC has the control.
 
 ## Loose coupling 
 * Maintaing Abstraction i.e coding for inrterfaces so that code is following solid principles.
