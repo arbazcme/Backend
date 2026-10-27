@@ -267,3 +267,92 @@ From creating of HttpservletRequest from raw string by tomcat, Later Dispatcher 
 * Controller : We generally return a ResponseEntity which has Statuscode, headers, body (Java Obj)
 * Dispatcher Servlet : Converts That Java Object to JSON (with spring mvc components coordination i.e jackson) +  headers + status code placed in HttpServletResponse
 * Tomcat Sends HTTP Response from HttpServletResponse Object.
+
+
+## Spring MVC 
+
+The Boiler Plate Code 
+```java
+public class Main {
+    public static void main(String[] args) throws LifecycleException {
+
+        // Boiler plate
+        Tomcat tomcat = new Tomcat();
+        tomcat.setPort(8080);
+        tomcat.getConnector(); //
+
+        String contextPath = ""; // Path of Your App when Using External Tomcat, just because its embedded its empty
+        String baseDoc = new File("src/main/webapp").getAbsolutePath(); // Path For Web Apps folder where Files related to App are there (JSP, HTML, etc). 
+
+        Context context = tomcat.addContext(contextPath, baseDoc); 
+
+        // IOC Container app
+        AnnotationConfigWebApplicationContext springContext =
+                new AnnotationConfigWebApplicationContext();
+
+        springContext.register(WebConfig.class); // To Create Beans 
+
+        // Dispatcher Servlet
+        DispatcherServlet dispatcherServlet =
+                new DispatcherServlet(springContext); // DS can Call Those Beans
+
+        Tomcat.addServlet(
+                context, "dispatcherServlet", dispatcherServlet);
+
+        context.addServletMappingDecoded(
+                "/", "dispatcherServlet"); // Forward requests starting with / to dispatcher servlet
+
+        tomcat.start();
+        System.out.println("Tomcat started on port 8080");
+        // keep server running
+        tomcat.getServer().await(); 
+    }
+}
+
+```
+### Evolution 
+Spring Core and Spring MVC reduced boilerplate compared with manual Java and Servlets.
+Spring Boot further reduces Spring configuration and setup boilerplate through auto-configuration.
+```text
+Servlets
+  ↓
+Spring Core
+  Dependency Injection + IoC
+  ↓
+Spring MVC
+  DispatcherServlet + Controllers
+  Request/response handling
+  ↓
+Spring Boot
+  Auto-configuration
+  Embedded Tomcat setup
+  Dependency management
+  Easy application startup
+```
+
+### @RestController vs @Controller 
+
+Spring MVC was Built for web applications and it means M - Model, V - View , C - Controller   
+Views are Java Servlet Pages which are just HTML + java injection and model is an object that takes data from controller to Views.  
+src/main we have webapps folder for JSP pages. and @controller is used to serve them. 
+
+when we do `return` in @Controller it searches for JSP pages provided in `baseDoc` and returns the prefix `contextPath` + returned Value + `.jsp`  
+When I write @ResponseBody, I tell that insted of JSP, write directly inside HTTP response Body
+
+```java
+
+@Controller
+@RequestMapping("/")
+class Greet{
+   @GetMapping
+   public String greet(){
+    return "hello"; // hello.jsp
+   }
+   @GetMapping("/hello")
+   @ResponseBody
+   public String greet(){
+    return "hello"; // Write directly to HTTP response, If java object is sent? it converts to JSON.  
+   }
+}
+@Controller + @ResponseBody is @RestController.
+```
