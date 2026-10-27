@@ -356,3 +356,73 @@ class Greet{
 }
 @Controller + @ResponseBody is @RestController.
 ```
+
+### Java Servlet Pages Project
+```text
+src/main
+|_ java/in/strikes
+|  |_ Your code..
+|_ webapps
+  |_Views
+
+// Main.java has the above similar Boiler plate code
+1. Setup Tomcat
+2. Path to application, as Embedded its ""
+3. Path to webapps folder, its place where JSP, HTML, CSS the resources of web app.
+4. Create Tomcat Context so that this context will map to dispatcher servlet
+5. Create Application context and say its springContext
+6. pass WebCongig.class to springContext
+7. Create DispatcherServlet and pass springContext
+8. With Tomcat Object, Map The context of application and dispatcher servlet (.addServlet()) and start.
+```
+
+```java
+// Controller
+@Controller
+public class HelloController {
+
+    @GetMapping("/")
+    public String showHomePage(Model model) {
+        model.addAttribute("message" , "Enter your name");
+        return "home";
+    }
+
+    @PostMapping("/greet")
+    public String greetUser(@RequestParam("name") String name, Model model) {
+        model.addAttribute("message", "Hello " + name);
+        return "home";
+    }
+}
+
+// WebConfig.java
+@Configuration
+@ComponentScan(basePackages = "in.strikes")
+@EnableWebMvc
+public class WebConfig implements WebMvcConfigurer {
+
+    @Bean
+    public ViewResolver viewResolver() {
+        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+
+        resolver.setPrefix("/WEB-INF/views/");
+        resolver.setSuffix(".jsp");
+
+        return resolver;
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("/assets/");
+    }
+}
+
+```
+### Spring Boot 
+* Spring boot solves this problem of configuring the tomcat, dispatcher servlet, configuration of application path.
+* Configuring database from application properties
+* Starter Libraries are already added
+* Common Library Beans and Boiler plate setup code managed by @AutoConfiguration classes
+* Managing Dependency versioning, one Library compatable with which version of another !  
+
+
