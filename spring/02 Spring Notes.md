@@ -425,4 +425,22 @@ public class WebConfig implements WebMvcConfigurer {
 * Common Library Beans and Boiler plate setup code managed by @AutoConfiguration classes
 * Managing Dependency versioning, one Library compatable with which version of another !  
 
+### Need For DTO's 
+* We want to have control, clear contract of API what it takes (Input, Like Update allows change of email but not the name etc) and what it provides.
+* User Might Update hidden fields and server might accidently save it into database. (Soft delete, isDeleted:True in input)
+* Server Might Send Database details into response, we need to have control over response.
 
+Tip : Spring boot handles versioning, what Library is compatable to which version of another? is from <parent> i.e spring-boot-starter-parent, this allows that.
+
+### Validations
+* spring-boot-stater-validation dependency
+1. NotBlank - Not empty, Not Null, no blankspaces (for strings)
+2. NotEmpty - Not null, not empty (for collections)
+3. NotNull - not null (Any object check)
+4. @Email, @Min(value), @Max(Value) size in chars  
+5. @Size(min, max) for a range
+6. @Pattern(regex) this pattern is used
+7. @Positive
+8. @Past, @Future (Data time)
+
+Validations of the above in the class defines rules and @Valid in parameter triggers the rules.  
