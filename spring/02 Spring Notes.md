@@ -495,3 +495,74 @@ Tips :
 }
 
 ```
+
+
+### Filling up Exception DTO in professional way
+```text
+Timestamp - LocalDateTime.now()  
+statuscCode - HttpStatus.NOT_FOUND.value()  
+error - HttpStatus.NOT_FOUND.getReasonPhrase()  
+message - ex.getMessage() (from Exception ex)  
+path -  request.getRequestURI ( from HttpServletRequest request)  
+```
+### When Sending All errors in validation
+```text
+So when we use MethodArgumentNotValid ex when @Valid fails     
+ex.getBindingResult().getFieldErrors() <- Gives List<FieldErrors>  
+
+FieldErrors is like   
+|__ String Field  
+|__ String defaultMessage  
+Map<String, String> mp = new Hashmap<>();
+ex.getBindingResult().getFieldErrors().forEach(error -> mp.put(error.getField, error.getDefaultMessage)
+```
+
+### Profiling in spring boot
+Why application.properties insted of hardcoding ?     
+* Code Which should not be hardcoded, which can change based on environment (test, prod etc).
+* changing code is bad practise (Tight coupling), we can change application.properties file
+* Security issue, when versioning. pushing it into github.  
+This application.properties is still internal configuration because the app.config `src/main/resources` is bundled inside the executable jar.
+
+### Application.properties vs .yaml
+Syntax different just the way how key value pair are written.  
+```text
+app.properties
+welcome.app.name=123
+welcome.app.id=123
+welcome.app.text=hi
+
+its tree like structure which represents the same as above.
+app.yaml
+welcome:
+  app:
+    name:123
+    id:123
+    text:hi
+```
+
+### Profiling in spring
+
+application.properties is main file and spring allows us to create extra properties files like    
+- application-{profile}.properties (profile can be like dev,prod,staging)  
+
+say if i have these three   : application-dev.properties, application-prod.properties, application-staging.properties   
+
+and we can activate profile with  
+`spring.profile.active=dev`  
+and configurations of application.profiles and what is active only these 2 will run. and among .yaml and .properties are present what is picked ? app.yaml is converted into app.properties so application.properties is prioritized.  
+
+### Providing configurations from out of application, Environment variable.
+- These are passed from OS, say from terminal
+`mvn spring-boot:run -Dspring-boot.run.profiles=prod`
+
+### @Profile Annotation 
+```java
+@Profile("prod")
+class ABC {}
+```
+Based on what is there in application.properties or what is passed from env variables the beans are created in one environment.   
+
+@Qualifier, @Primary works in same environment, where as profile allows to create beans if it matches the profile property in application.properties  
+
+profile can be used as `@Profile({"dev", "default", "staging"})`
