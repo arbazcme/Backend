@@ -444,3 +444,54 @@ Tip : Spring boot handles versioning, what Library is compatable to which versio
 8. @Past, @Future (Data time)
 
 Validations of the above in the class defines rules and @Valid in parameter triggers the rules.  
+
+
+## Reasons for Exception Handler
+* Spring default Exception Handling is genric, Not detailed.
+* Controller's responsiblity is get response from service and send back to client, it should not take care of exceptional cases (if else code.. Like if present else send null checks or try catch code..) like empty,null etc.
+
+
+### @RestControllerAdvice and @ControllerAdvice
+These are helper classes, common behaviour in all controllers you can take that and define in classes with @RestControllerAdvice, Exception is also common Behaviour  
+When Returning JSP use ControllerAdvice, when JSON response RestControllerAdvice.
+
+
+### REST API's
+Its Architectural style, it means it has design constraints and principles of how to structure and build a system.  
+Rules Include : 
+* Route + HTTP method uniquely identifies an operation.
+* JSON is commonly used for request and responses
+* Path variables are prefered, this allowes relation in routing, which is clear and prefered.
+* It is stateless, so rest statelessness means should not depend on any other requests, server on its own with its resources (it can have a session store and find out but statelessness means it should not depend on previous request or any other) can be able to perform the task
+* it should be cacheable (include cache headers)
+
+
+### What Happens when you define exception handler and when you dont.
+When You dont define the exception will propagate from service back to controller and reach spring dispatcher servlet and it will sent genric response for your exception.   
+When you define  
+<img src="images/exceptionhandlingflow.png" width="100%" height="100%">  
+From service it goes to global exception handler and response to user is sent from there. Exception will not got back to controller.  
+
+Tips :   
+1. Controllers Should not know about Entities, Repository later should not know about DTO's.
+2. You can request HttpServletRequest directly in Spring MVC controller methods and @ExceptionHandler methods
+
+### More on Global Exception Handler
+1. Order of exceptions defined in Global excpetion handler will not matter, spring will decide the most sutable exception. (specilized -> genralized)
+2. MethodArugmentNotValid Exception when Validations fails
+3. Exception Handler DTO is prefered and it is like
+```json
+{
+  "timestamp": "2026-07-07T13:55:01.176908",
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Validation Failed",
+  "path": "/api/students",
+  "fieldErrors": {
+    "name": "Name cannot be null/Empty or blank",
+    "email": "Student email must be valid",
+    "age": "Student must be atleast 18 years old"
+  }
+}
+
+```
