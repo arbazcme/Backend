@@ -14,6 +14,13 @@ What Filters are used for
 ### Position of Filter in Spring flow 
 <img src="images/filterpos.png" width="100%" height="100%">
 
+
+### Filter Lifecycle
+- init() when filter is created. starting of app, this is not manditory
+- doFilter() calling next filter when one filter has done its work
+- destroy() when application is closing this destroy runs
+
+Tomcat creates HttpServletRequest but the references are of ServletRequest in filter because they are general purpose and not limited to HttpRequests this might be there in servlets as well but the underlying object is HttpServletRequest.  
 ### Filter code
 ```java
 @Component
