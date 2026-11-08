@@ -249,5 +249,18 @@ public class Api{
 ```
 
 ## Where Interceptors shine
-You can write one reusable interceptor and dynamically execute its logic based on controller metadata and custom annotations, without hardcoding URL-to-controller mappings.  
+You can write one reusable interceptor and dynamically execute its logic based on controller metadata and custom annotations.  
+
+### Creation of custom annotations 
+
+```java
+@Target(ElementType.METHOD) // Specifies where it can be applied (Methods)
+@Retention(RetentionPolicy.RUNTIME)  
+public @interface TrackExecutionTime {
+}
+```
+* @Target(ElementType.Method)
+  * target Tells us that it can be applied on Methods.
+* @Retention(RetentionPolicy.RUNTIME)
+   * tells Java to store the annotation information in the compiled .class file, so the Reflection API can read it while the program is running. This applies to any annotation marked with RUNTIME retention.
 
