@@ -12,7 +12,7 @@ What Filters are used for
 7. Measure total request duration (Total time to serve)
 
 ### Position of Filter in Spring flow 
-<img src="images/filterpos.png" width="100%" height="100%">
+<img src="images/recap_of_architecture.png" width="100%" height="100%">  
 
 
 ### Filter Lifecycle
@@ -21,134 +21,51 @@ What Filters are used for
 - destroy() when application is closing this destroy runs
 
 Tomcat creates HttpServletRequest but the references are of ServletRequest in filter because they are general purpose and not limited to HttpRequests this might be there in servlets as well but the underlying object is HttpServletRequest.  
-### Filter code
-```java
-@Component
-@Order(1)
-public class AuthenticationFilter implements Filter  {
-    @Override
-    public void doFilter(ServletRequest servletRequest,ServletResponse servletResponse,FilterChain filterChain)throws IOException, ServletException {
-
-        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        HttpServletResponse httpResponse = (HttpServletResponse)  servletResponse;
-
-        String token =  httpRequest.getHeader("token");
-        String apiKey = httpRequest.getHeader("x-api-key");
-
-        if(token == null || !token.equals("12345")) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            return;
-        }
-        if(apiKey == null || !apiKey.equals("secret123")) {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("{\n" + " \"message\" : \"Invalid or missing Api key\"\n" + "}");
-            return;
-        }
-        filterChain.doFilter(servletRequest, servletResponse);
-    }
-}
-
-@Component
-@Order(2)
-public class LoggingFilter implements Filter {
-
-    @Override
-    public void doFilter(ServletRequest servletRequest,ServletResponse servletResponse,FilterChain filterChain)throws IOException, ServletException {
-
-        long startTime = System.currentTimeMillis();
-        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        HttpServletResponse httpResponse =(HttpServletResponse)  servletResponse;
-
-        String requestId = UUID.randomUUID().toString();
-        httpResponse.setHeader("X-Request-ID", requestId);
-
-        // Request log
-        System.out.println("Incoming Request : "+ httpRequest.getMethod() + " "+ httpRequest.getRequestURI());
-      try {
-          filterChain.doFilter(servletRequest, servletResponse);
-      }
-      finally {
-          long duration = System.currentTimeMillis() - startTime;
-          // Response status log
-          System.out.println("Response status: "+  httpResponse.getStatus());
-          System.out.println("API Response time : " + duration);
-      }
-    }
-}
-
-```
 
 ### Why cant we make changes in Response object after doFilter() ?
 
 Dispatcher Servlet internally uses streams to populate the body. once stream is used then the response may be commited state (sent or started sending the response to user) 
-`response.getWriter().write()` basically this line. better to set before.  
+`response.getWriter().write()` basically this line. better to set before.   
 
-Tip :  based on ResponseEntity class's object the dispatcher servlet populates the HttpServletResponse.   
+Recap : based on ResponseEntity class's object the dispatcher servlet populates the HttpServletResponse.   
 
 
 ### Input Stream in Filter 
+
 If you try to read the input stream say for logging purpose httpservletresponse.getReader() say, then pass it in doFilter() you will get empty stream inside HttpservletResponse as stream is not stored it is continously flowing and its already consumed. so be careful on that.  
 
+<img src="images/data_as_stream.png" width="100%" height="100%">  
+
 ### Ways to declare Filters 
-- One Way of implementing Filter is above mentioned
-- OncePerRequestFilter Abstract class or You can implement Filter but Typecast ServletRequest to HttpServletRequest Manually
-```java
-@Component
-@Order(1)
-public class LogFilter extends OncePerRequestFilter {
+- OncePerRequestFilter Abstract class or You can implement Filter interface but Typecast ServletRequest to HttpServletRequest Manually
 
-    @Override
-    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String id = UUID.randomUUID().toString();
-        System.out.println(request.getMethod() + " " + request.getRequestURI() + " " + id);
+### Use of addUrlPatterns("/api/*") 
+This can add some filter in chain only if the request pattern matches else the filter is not added in the chain for some request.   
 
-        response.setHeader("X-Request-Id", id);
+The other way to achieve this is you maintain a chain and based on request you skip the filters.with help of if checks inside filter   
+The difference is you enter the filter and skip through vs filter is not entered in first place.   `if(httpServletRequest.getRequestURI().startsWith("/api/")`  
 
-        System.out.println("Order 1");
-        filterChain.doFilter(request, response);
-    }
-}
+## Interceptors
 
-// Or Dont Set @Component and Order and This way
+### Term Handler 
+handler is a genric term refers to who handles the request, in rest it is controllers and in static resourses its ResourceHttpRequestHandler etc.   
 
-public class AuthFilter extends OncePerRequestFilter {
-    @Override
-    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String key = "12345";
-        String token = request.getHeader("x-api-token");
-        if(!Objects.equals(token, key)){
-            response.setStatus(HttpStatus.UNAUTHORIZED.value());
-            response.setContentType("application/json");
-            response.getWriter().write("Invalid Credentials");
-            return;
-        }
-        System.out.println("Order 2");
+Interceptors are like filters but they have addition information as we know which method of which controller is being called. because it is after dispatcher servlet. For Specilized task that is done in set of controllers we use Interceptors and genralized task for all the controllers we do use filters.   
 
-        System.out.println("Valid Request of /api/");
-        chain.doFilter(request, response);
-    }
-}
+As we Know the controller the Interceptors chain are like layers of onion peel.  
+This helps in understanding The flow in the In-Depth Architecture.
 
-// In some Configuration class
-@Configuration
-public class FilterConfiguration {
+<img src="images/Interceptor_chain.png" width="100%" height="100%">  
 
-    @Bean
-    public FilterRegistrationBean<AuthFilter> authFilterBean() {
-        FilterRegistrationBean<AuthFilter> registrationBean = new FilterRegistrationBean<>();
+### Interceptor Methods 
+- preHandle()
+- postHandle()
+- afterCompletion()
 
-        registrationBean.setFilter(new AuthFilter());
-        registrationBean.setOrder(2);
-        registrationBean.addUrlPatterns("/api/*");
-        return registrationBean;
-    }
-}
+### postHandle() vs afterCompletion()
+The difference comes when using JSP pages, in postHandle response(JSP pages) is not yet created, We can make final changes to Model Object that populates the JSP page later the response is created and sent to client later the afterCompletion runs.in REST Api's the differnece is NULL so we only use preHandle() and afterCompletion().
 
-```
 
-### addUrlPatterns("/api/*") 
-This can add this filter in chain only if the pattern matches. You can simulate this with help of if checks inside filter the difference is you enter the filter and skip through vs filter is not entered in first place. `if(httpServletRequest.getRequestURI().startsWith("/api/")`  
 
 ### Recap
 handler mapping and adapter are also passed as beans (The ApplicationContext is passed) the dispatcher Servlet uses them.  
@@ -156,19 +73,174 @@ handler mapping and adapter are also passed as beans (The ApplicationContext is 
 - Handler Adapter actually invokes by populating the params. it uses jackson to convert JSON <-> Java Obj and then populates.
 - Both are Beans inside Application context and total application context is passed to dispatcher servlet.
 
-## Interceptors
+<img src="images/Depth_Interceptor_chain.png" width="100%" height="100%">   
 
-### Term Handler 
-handler is a genric term refers to who handles the request, in rest it is controllers and in static resourses its ResourceHttpRequestHandler etc.   
+### Clarity on Recap
+Who converts the JSON <-> Java Object (Obv. Jackson Library) not dispatcher not Handler Adapter but the HttpMessageConverters they are used for conversions and invoked differently
+- Request: `DispatcherServlet → HandlerAdapter → Argument Resolvers → HttpMessageConverter (JSON → Java object) → Controller`.
 
-Interceptors are like filters but they have addition information as we know which method of which controller is being called. because it is after dispatcher servlet. For Specilized task that is done in set of controllers we use Interceptors and genralized task for all the controllers we do use filters.  
-<img src="images/interceptors.png" width="75%" height="75%">
-
-As we Know the controller the Interceptors chain are like layers of onion peel. 
-<img src="images/interceptors_onoin.png" width="100%" height="100%">
-
-This helps in understanding The flow in the In-Depth Architecture
-<img src="images/complete_flow_interceptors.png" width="100%" height="100%">
+- Response: `Controller → HandlerAdapter → Return Value Handler → HttpMessageConverter (Java object → JSON) → DispatcherServlet → postHandle() → Response Is Ready The HttpServletResponse population (as its there just popuation was pending) → afterCompletion() -> Sent to Tomcat `.
 
 
+### Filters and Interceptors Practise code
+```java
 
+// AuthFilter.java
+@Component
+public class AuthFilter extends OncePerRequestFilter{
+    @Override
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        String token = request.getHeader("token");
+        String key = "12345";
+        if(Objects.equals(token, key)){
+            System.out.println("Passed through Auth Filter");
+            chain.doFilter(request, response);
+            return;
+        }
+        response.setStatus(404);
+        response.getWriter().write("Invalid key");
+    }
+}
+
+// LogFilter.java
+@Component
+public class LogFilter extends OncePerRequestFilter {
+    @Override
+    public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
+        System.out.println("Logging Filter");
+        System.out.println("Request Method : " + request.getMethod() + "\n" + "Request route :" + request.getRequestURI());
+        chain.doFilter(request, response);
+    }
+}
+
+// FilterConfiguration.java
+@Configuration
+public class FilterConfiguration {
+    public final AuthFilter authFilter;
+    public  final LogFilter logFilter;
+    public FilterConfiguration(AuthFilter authFilter, LogFilter logFilter){
+        this.authFilter = authFilter;
+        this.logFilter = logFilter;
+    }
+    @Bean
+    public FilterRegistrationBean<AuthFilter> registerAuth(){
+        FilterRegistrationBean<AuthFilter> registrationBean  = new FilterRegistrationBean<>();
+        registrationBean.setFilter(authFilter);
+        registrationBean.setOrder(1);
+        return registrationBean;
+    }
+    @Bean
+    public FilterRegistrationBean<LogFilter> registerLog(){
+        FilterRegistrationBean<LogFilter> registerBean = new FilterRegistrationBean<>();
+        registerBean.setFilter(logFilter);
+        registerBean.setOrder(2);
+        return registerBean;
+    }
+}
+
+// AuthInterceptor.java
+@Component
+public class AuthInterceptor implements HandlerInterceptor {
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
+
+        if(handler instanceof HandlerMethod method){
+            System.out.println("Entered Auth Interceptor");
+            if(method.getBeanType() == Api.class){
+                String token = request.getHeader("tokens");
+                if(Objects.equals(token, "1234")){
+                    System.out.println("Passed through Auth Interceptor");
+                    request.setAttribute("temp", true);
+                    return true;
+                }else {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+                         @Nullable Exception ex) throws Exception {
+        System.out.println("After completion of Interceptor");
+        if((boolean)request.getAttribute("temp")){
+            System.out.println("Interceptor True");
+        }
+    }
+}
+
+// LogInterceptor.java
+@Component
+public class LogInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
+        if(handler instanceof HandlerMethod method){
+            System.out.println("Entered Logging Interceptor");
+            if(method.getBeanType() == Student.class){
+                request.setAttribute("time", System.currentTimeMillis());
+                System.out.println("HTTP Method: " + request.getMethod());
+                System.out.println("Request URI: " + request.getRequestURI());
+                System.out.println("Request Paramters: " + request.getQueryString());
+                System.out.println("Client IP: " + request.getRemoteAddr());
+                System.out.println(method.getMethod().getName() +
+                        "\n" + method.getBeanType().getSimpleName());
+            }
+        }
+        return true;
+    }
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler,
+                                @Nullable Exception ex) throws Exception {
+        System.out.println("Interceptor outer");
+        Object temp = request.getAttribute("time");
+        if(temp != null){
+            System.out.println("Time " + (System.currentTimeMillis() - ((long) temp)) + " ms");
+        }
+
+        System.out.println("Response status: " + response.getStatus());
+    }
+}
+
+// InterceptorConfiguration.java
+@Configuration
+public class InterceptorConfiguration implements WebMvcConfigurer {
+    public final AuthInterceptor authInterceptor;
+    public final LogInterceptor logInterceptor;
+
+    public WebConfiguration(AuthInterceptor authInterceptor, LogInterceptor logInterceptor){
+        this.authInterceptor = authInterceptor;
+        this.logInterceptor = logInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry){
+        registry.addInterceptor(logInterceptor)
+                .order(2);
+        registry.addInterceptor(authInterceptor)
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/auth/**")
+                .order(1);
+    }
+}
+
+// Student Controller
+@RestController
+@RequestMapping("/students")
+public class Student {
+    @GetMapping
+    public ResponseEntity<String> greet(){
+        return ResponseEntity.status(HttpStatus.OK).body("Hello");
+    }
+}
+// Api controller
+@RestController
+@RequestMapping("/api")
+public class Api{
+    @GetMapping
+    public ResponseEntity<String> greet(){
+        return ResponseEntity.ok("Validation success");
+    }
+}
+```
