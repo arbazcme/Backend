@@ -79,8 +79,11 @@ handler mapping and adapter are also passed as beans (The ApplicationContext is 
 Who converts the JSON <-> Java Object (Obv. Jackson Library) not dispatcher not Handler Adapter but the HttpMessageConverters they are used for conversions and invoked differently
 - Request: `DispatcherServlet → HandlerAdapter → Argument Resolvers → HttpMessageConverter (JSON → Java object) → Controller`.
 
-- Response: `Controller → HandlerAdapter → Return Value Handler → HttpMessageConverter (Java object → JSON) → DispatcherServlet → postHandle() → Response Is Ready The HttpServletResponse population (as its there just popuation was pending) → afterCompletion() -> Sent to Tomcat `.
+- Response: `Controller → HandlerAdapter → Return Value Handler → HttpMessageConverter (Java object → JSON) → DispatcherServlet → postHandle() → Response Is Ready, The HttpServletResponse population (as its there just popuation was pending) → afterCompletion() -> Sent to Tomcat `.
 
+**When Dealing with REST Api's The response is converted in Handler Adapter i.e before postHandle() and In JSP pages it is after postHandle() Then the JSP page is ready and in the end the afterCompletion() is called and control/response is sent to Tomcat**  
+
+Important: The response is already prepared before afterCompletion() in Both JSP/JSON specifically before postHandle.  
 
 ### Filters and Interceptors Practise code
 ```java
