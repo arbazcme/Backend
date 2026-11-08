@@ -546,11 +546,13 @@ welcome:
 application.properties is main file and spring allows us to create extra properties files like    
 - application-{profile}.properties (profile can be like dev,prod,staging)  
 
-say if i have these three   : application-dev.properties, application-prod.properties, application-staging.properties   
+Say if i have these three   : application-dev.properties, application-prod.properties, application-staging.properties   
 
 and we can activate profile with  
-`spring.profile.active=dev`  
+`spring.profiles.active=dev`  
 and configurations of application.profiles and what is active only these 2 will run. and among .yaml and .properties are present what is picked ? app.yaml is converted into app.properties so application.properties is prioritized.  
+
+application.properties is passing configuration from inside, it is bundled inside jar so generally not safe we will use Environment variables that are passed from outside so thats safer.  
 
 ### Providing configurations from out of application, Environment variable.
 - These are passed from OS, say from terminal
@@ -565,4 +567,5 @@ Based on what is there in application.properties or what is passed from env vari
 
 @Qualifier, @Primary works in same environment, where as profile allows to create beans if it matches the profile property in application.properties  
 
-profile can be used as `@Profile({"dev", "default", "staging"})`
+- profile can be used as `@Profile({"dev", "default", "staging"})`
+- application-{profile}.properties if activated will override overlapping properties of application.properties
