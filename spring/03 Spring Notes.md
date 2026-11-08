@@ -34,7 +34,7 @@ Recap : based on ResponseEntity class's object the dispatcher servlet populates 
 
 If you try to read the input stream say for logging purpose httpservletresponse.getReader() say, then pass it in doFilter() you will get empty stream inside HttpservletResponse as stream is not stored it is continously flowing and its already consumed. so be careful on that.  
 
-<img src="images/data_as_stream.png" width="100%" height="100%">  
+<img src="images/data_as_stream.png" width="65%" height="85%">  
 
 ### Ways to declare Filters 
 - OncePerRequestFilter Abstract class or You can implement Filter interface but Typecast ServletRequest to HttpServletRequest Manually
@@ -247,3 +247,7 @@ public class Api{
     }
 }
 ```
+
+## Where Interceptors shine
+You can write one reusable interceptor and dynamically execute its logic based on controller metadata and custom annotations, without hardcoding URL-to-controller mappings.  
+
