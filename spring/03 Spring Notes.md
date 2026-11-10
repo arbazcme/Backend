@@ -11,7 +11,7 @@ What Filters are used for
 6. Log Request Details
 7. Measure total request duration (Total time to serve)
 
-### Position of Filter in Spring flow 
+### Position of Filter in Spring flow  
 <img src="images/recap_of_architecture.png" width="100%" height="100%">  
 
 
@@ -53,7 +53,7 @@ handler is a genric term refers to who handles the request, in rest it is contro
 Interceptors are like filters but they have addition information as we know which method of which controller is being called. because it is after dispatcher servlet. For Specilized task that is done in set of controllers we use Interceptors and genralized task for all the controllers we do use filters.   
 
 As we Know the controller the Interceptors chain are like layers of onion peel.  
-This helps in understanding The flow in the In-Depth Architecture.
+This helps in understanding The flow in the In-Depth Architecture.  
 
 <img src="images/Interceptor_chain.png" width="100%" height="100%">  
 
@@ -271,8 +271,8 @@ Aspect Oriented programming is used to intercept the Method call. its like perfo
 
 For a normal class its methods scale down, that means methods belong to its own class (Business logic). some tasks scale horizontally, there are present in many class (Infra code Like logging, Execution Time calc, Security etc) They are cross-cutting concerns. This helps decide what task to be wrapped in proxy object or not.
 
-The proxies implementation is this Decorator pattern or Proxy pattern? Both are same but the different is intent That is if you are providing layer by layer functionality better to call Decorator pattern, when controlling a object (may allowing request to pass, security etc ) through a middleman object (proxy) to target object, so any of the above can be called.
-<img src="images/decorater.png" height="100%" width="100%">
+The proxies implementation is this Decorator pattern or Proxy pattern? Both are same but the different is intent That is if you are providing layer by layer functionality better to call Decorator pattern, when controlling a object (may allowing request to pass, security etc ) through a middleman object (proxy) to target object, so any of the above can be called.  
+<img src="images/decorater.png" height="100%" width="100%">  
 
 **Note: Calls involving `this` same class Method calls bypasses Spring proxy**
 
@@ -289,11 +289,11 @@ When It revolves around HTTP request prefer Interceptor and whe its better as me
 AOP isn't restricted to the service layer. But seperation of concerns we use accoring to above.
 
 ### Where it All started ?
-The problem is This the cross cutting concerns  
-<img src="aop_starter.png" height="100%" width="100%">
+The problem is This the cross cutting concerns   
+<img src="images/aop_starter.png" height="100%" width="100%">
 
 The solutions include like using of seperate wrappers and take them as dependency, still lot many problems, one might forget, scalability issues etc. use of decorater/proxy pattern, implementation and maintaining is hard, maintaining proxy objects and layers and the correct flow is hard so spring takes care of that and internally its proxy/decorator pattern
-### Before vs after AOP's  
+### Before vs after AOP's   
 <img src="images/problems.png" height="100%" width="100%">
 
 ### 3 Questions for AOP
@@ -302,11 +302,11 @@ The solutions include like using of seperate wrappers and take them as dependenc
 - what (the Logic)
 
 `what` and `when` combined are called as Advice and where `where` as pointcut.    
-`what` and `where`  combined are called as Aspect  
+`what` and `where`  combined are called as Aspect   
 <img src="images/advice.png" height="100%" width="100%">
 
 
-### Flow of an AOP request
+### Flow of an AOP request  
 <img src="images/working_of_AOP.png" height="100%" width="100%">
 
 ### The @Around Annotation 
