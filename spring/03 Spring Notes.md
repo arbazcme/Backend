@@ -248,7 +248,7 @@ public class Api{
 }
 ```
 
-## Where Interceptors shine
+### Where Interceptors shine
 You can write one reusable interceptor and dynamically execute its logic based on controller metadata and custom annotations.  
 
 ### Creation of custom annotations 
@@ -263,4 +263,114 @@ public @interface TrackExecutionTime {
   * target Tells us that it can be applied on Methods.
 * @Retention(RetentionPolicy.RUNTIME)
    * tells Java to store the annotation information in the compiled .class file, so the Reflection API can read it while the program is running. This applies to any annotation marked with RUNTIME retention.
+
+
+### Aspect Oriented Programming
+
+Aspect Oriented programming is used to intercept the Method call. its like performing some task before or after a Method. similar to Interceptor to controller and Filters to Dispatcher servlet. Mainly we use this AOP in service layer Methods for Cross-cutting concerns.  
+
+For a normal class its methods scale down, that means methods belong to its own class (Business logic). some tasks scale horizontally, there are present in many class (Infra code Like logging, Execution Time calc, Security etc) They are cross-cutting concerns. This helps decide what task to be wrapped in proxy object or not.
+
+The proxies implementation is this Decorator pattern or Proxy pattern? Both are same but the different is intent That is if you are providing layer by layer functionality better to call Decorator pattern, when controlling a object (may allowing request to pass, security etc ) through a middleman object (proxy) to target object, so any of the above can be called.
+<img src="images/decorater.png" height="100%" width="100%">
+
+**Note: Calls involving `this` same class Method calls bypasses Spring proxy**
+
+### Why AOP when we have Interceptors and Filters
+They work around HTTP Lifecycle, But for business logic it may be called another method of business logic, some scheduled task etc. Spring AOP intercepts method calls that go through Spring's proxy to solve the problem of cross-cutting concerns.  
+<img src="images/Decorater_main.png" height="100%" width="100%">
+
+Then why use of Interceptors ? They work at controller layer and this in service layer ! The core reason is seperation of responsibilities so we use AOP's.  
+
+When It revolves around HTTP request prefer Interceptor and whe its better as method related then AOP is better.
+1.Interceptor Ask: Does this logic exist because an HTTP request is happening?
+2.AOP Ask: Should this logic execute whenever a particular method is called, regardless of who calls it?
+
+AOP isn't restricted to the service layer. But seperation of concerns we use accoring to above.
+
+### Where it All started ?
+The problem is This the cross cutting concerns  
+<img src="aop_starter.png" height="100%" width="100%">
+
+The solutions include like using of seperate wrappers and take them as dependency, still lot many problems, one might forget, scalability issues etc. use of decorater/proxy pattern, implementation and maintaining is hard, maintaining proxy objects and layers and the correct flow is hard so spring takes care of that and internally its proxy/decorator pattern
+### Before vs after AOP's  
+<img src="images/problems.png" height="100%" width="100%">
+
+### 3 Questions for AOP
+- when (When to call proxy @Before, @AfterReturning, ...)
+- where (The absolute path to func call with same params and return type)
+- what (the Logic)
+
+`what` and `when` combined are called as Advice and where `where` as pointcut.    
+`what` and `where`  combined are called as Aspect  
+<img src="images/advice.png" height="100%" width="100%">
+
+
+### Flow of an AOP request
+<img src="images/working_of_AOP.png" height="100%" width="100%">
+
+### The @Around Annotation 
+it is the main powerful AOP that can actally mutate the req and/or response object before or after req, and when we do `ProceedingJoinPoint req` and when req.proceed() the req will not move forward.
+
+Sample practise code
+```java
+ @Around("execution(String dev.arbaz.aops.service.BankService.withdrawl(String,Integer))")
+    public String logAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        Long beforeTime = System.currentTimeMillis();
+        Object[] args = joinPoint.getArgs();
+        String name = (String) args[0];
+        name = "Guest " + name;
+        Object[] newArgs = {name, args[1]};
+
+        try{
+            Object response = joinPoint.proceed(newArgs);
+            String newResponse = ((String) response) + " inr";
+            System.out.println("Sending response to " + name + " " + newResponse);
+            return newResponse;
+
+        }catch(Throwable ex){
+            throw ex;
+        }finally{
+            Long duration = System.currentTimeMillis() - beforeTime;
+            System.out.println("Withdraw Request took " + duration + "ms");
+        }
+    }
+
+    @Before("execution(String dev.arbaz.aops.service.BankService.withdrawl(String,Integer))")
+    public void logBeforeWithdraw(JoinPoint joinPoint){
+        Object[] args = joinPoint.getArgs();
+        String name = (String) args[0];
+        Integer amount = (Integer) args[1];
+        System.out.println(name + " Request to Withdraw " + " " + amount);
+    }
+    // @AfterReturning(value = ...,  returning = "var_name_in_params")
+    @AfterThrowing(value = "execution(String dev.arbaz.aops.service.BankService.withdrawl(String,Integer))",
+            throwing = "exception")
+    public void logAfterThrowingWithdraw(JoinPoint joinPoint, Throwable exception){
+        Object[] args = joinPoint.getArgs();
+        String name = (String) args[0];
+        System.out.println("Exception For User " + name + " " + exception.getMessage());
+    }
+    // @After similar to finally block evecutes even when AfterReturning (success) or AfterThrowing (failure)
+```
+
+JoinPoint - Gives the information of the Method that will be called after the proxies.   
+
+### The @Around Method
+The actual wrapper that can change request Parameters and response data, when joinPoint.proceed() Then the cycle starts
+```text
+@Around: when we before of joinMethod.proceed() then
+    | proceed()
+    v
+@Before
+    |
+Service method
+    |
+@AfterReturning (or @AfterThrowing)
+    |
+@After
+    |
+    v
+@Around: After everything (just below the joinMethod.proceed)
+```
 
