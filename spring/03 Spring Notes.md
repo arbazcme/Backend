@@ -12,7 +12,7 @@ What Filters are used for
 7. Measure total request duration (Total time to serve)
 
 ### Position of Filter in Spring flow  
-<img src="images/recap_of_architecture.png" width="100%" height="100%">  
+<img src="images/recap_of_architecture.png" width="90%" height="90%">  
 
 
 ### Filter Lifecycle
@@ -55,7 +55,7 @@ Interceptors are like filters but they have addition information as we know whic
 As we Know the controller the Interceptors chain are like layers of onion peel.  
 This helps in understanding The flow in the In-Depth Architecture.  
 
-<img src="images/Interceptor_chain.png" width="100%" height="100%">  
+<img src="images/Interceptor_chain.png" width="90%" height="90%">  
 
 ### Interceptor Methods 
 - preHandle()
@@ -73,7 +73,7 @@ handler mapping and adapter are also passed as beans (The ApplicationContext is 
 - Handler Adapter actually invokes by populating the params. it uses jackson to convert JSON <-> Java Obj and then populates.
 - Both are Beans inside Application context and total application context is passed to dispatcher servlet.
 
-<img src="images/Depth_Interceptor_chain.png" width="100%" height="100%">   
+<img src="images/Depth_Interceptor_chain.png" width="90%" height="90%">   
 
 ### Clarity on Recap
 Who converts the JSON <-> Java Object (Obv. Jackson Library) not dispatcher not Handler Adapter but the HttpMessageConverters they are used for conversions and invoked differently
@@ -272,13 +272,13 @@ Aspect Oriented programming is used to intercept the Method call. its like perfo
 For a normal class its methods scale down, that means methods belong to its own class (Business logic). some tasks scale horizontally, there are present in many class (Infra code Like logging, Execution Time calc, Security etc) They are cross-cutting concerns. This helps decide what task to be wrapped in proxy object or not.
 
 The proxies implementation is this Decorator pattern or Proxy pattern? Both are same but the different is intent That is if you are providing layer by layer functionality better to call Decorator pattern, when controlling a object (may allowing request to pass, security etc ) through a middleman object (proxy) to target object, so any of the above can be called.  
-<img src="images/decorater.png" height="100%" width="100%">  
+<img src="images/decorater.png" height="90%" width="90%">  
 
 **Note: Calls involving `this` same class Method calls bypasses Spring proxy**
 
 ### Why AOP when we have Interceptors and Filters
 They work around HTTP Lifecycle, But for business logic it may be called another method of business logic, some scheduled task etc. Spring AOP intercepts method calls that go through Spring's proxy to solve the problem of cross-cutting concerns.  
-<img src="images/Decorater_main.png" height="100%" width="100%">
+<img src="images/Decorater_main.png" height="90%" width="90%">
 
 Then why use of Interceptors ? They work at controller layer and this in service layer ! The core reason is seperation of responsibilities so we use AOP's.  
 
@@ -289,12 +289,11 @@ When It revolves around HTTP request prefer Interceptor and whe its better as me
 AOP isn't restricted to the service layer. But seperation of concerns we use accoring to above.
 
 ### Where it All started ?
-The problem is This the cross cutting concerns   
-<img src="images/aop_starter.png" height="100%" width="100%">
+The problem is This the cross cutting concerns    
 
 The solutions include like using of seperate wrappers and take them as dependency, still lot many problems, one might forget, scalability issues etc. use of decorater/proxy pattern, implementation and maintaining is hard, maintaining proxy objects and layers and the correct flow is hard so spring takes care of that and internally its proxy/decorator pattern
 ### Before vs after AOP's   
-<img src="images/problems.png" height="100%" width="100%">
+<img src="images/problems.png" height="90%" width="90%">
 
 ### 3 Questions for AOP
 - when (When to call proxy @Before, @AfterReturning, ...)
@@ -303,11 +302,11 @@ The solutions include like using of seperate wrappers and take them as dependenc
 
 `what` and `when` combined are called as Advice and where `where` as pointcut.    
 `what` and `where`  combined are called as Aspect   
-<img src="images/advice.png" height="100%" width="100%">
+<img src="images/advice.png" height="90%" width="90%">
 
 
 ### Flow of an AOP request  
-<img src="images/working_of_AOP.png" height="100%" width="100%">
+<img src="images/working_of_AOP.png" height="90%" width="90%">
 
 ### The @Around Annotation 
 it is the main powerful AOP that can actally mutate the req and/or response object before or after req, and when we do `ProceedingJoinPoint req` and when req.proceed() the req will not move forward.
