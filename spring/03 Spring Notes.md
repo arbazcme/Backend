@@ -249,7 +249,7 @@ public class Api{
 ```
 
 ### Where Interceptors shine
-You can write one reusable interceptor and dynamically execute its logic based on controller metadata and custom annotations.  
+You can write one reusable interceptor and dynamically execution its logic based on controller metadata and custom annotations.  
 
 ### Creation of custom annotations 
 
@@ -284,7 +284,7 @@ Then why use of Interceptors ? They work at controller layer and this in service
 
 When It revolves around HTTP request prefer Interceptor and whe its better as method related then AOP is better.
 1.Interceptor Ask: Does this logic exist because an HTTP request is happening?
-2.AOP Ask: Should this logic execute whenever a particular method is called, regardless of who calls it?
+2.AOP Ask: Should this logic execution whenever a particular method is called, regardless of who calls it?
 
 AOP isn't restricted to the service layer. But seperation of concerns we use accoring to above.
 
@@ -354,6 +354,7 @@ Sample practise code
 ```
 
 JoinPoint - Gives the information of the Method that will be called after the proxies.   
+ProceedingJointPoint - The Child class that can perform .proceed() to forward the request.
 
 ### The @Around Method
 The actual wrapper that can change request Parameters and response data, when joinPoint.proceed() Then the cycle starts
@@ -372,4 +373,26 @@ Service method
     v
 @Around: After everything (just below the joinMethod.proceed)
 ```
+
+### Proxy Recap
+So proxy in spring is a middleman func that intercepts the call before going to a target function, there exists only one proxy and it can have many advices (can be vizualized as onion peel) that reaches the terget method !
+
+### Pointcut Expression 
+
+We can use 2 wild cards to make a generic advice that can be used to intercept all the common targets, we have * and .. wildcards, * means a single level anything and .. means all further levels.  
+
+Structure of a point cut: `PointCutMethod(AccessSpecifier ReturnType FullPathToTargetBasedOnMethod(SignatureOfArgumentsOfThatMethod) )`  public access specifier can be ignored.  
+
+- Most common is exectute() this is for Methods, `execution(* dev.arbaz.in.service.BankService.MethodName(*, Integer, *))` like wise we write a pointcut.   
+- we can use * for method name - `execution(* dev.arbaz.in.service.BankService.*(*, Integer, *))` like wise we write a pointcut.  
+- or we can use for Service Folder's all classes level as well (direct classes as last * in execution represents a method so nested classes cannot be targeted): `execution(* dev.arbaz.in.service.*.*(*, Integer, *))` like wise we write a pointcut.  
+
+Usage of .. wildcard  
+- For any number of arguments `execution(* dev.arbaz.in.service.BankService.MethodName(..))` like wise we write a pointcut.
+- as last * is Method name in execution and I intend to target all classes of service (even in sub packages): `execution(* dev.arbaz.in.service..*(..))`
+- Usage of && and || operators in conditioning inside PointQuery method  
+
+Eg:  `@Before("within(in.strikes.Service) && execution(* * (..))")`   (Means any retrurn type, targets all classes's methods, and any params inside Service)   
+
+### Types of PointCut expression Methods 
 
