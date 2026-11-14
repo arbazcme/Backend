@@ -480,5 +480,5 @@ StudentService Proxy (ONE)
        |
        └── delete() → Advice 2 → Target
 ```
-So each proxy has chain of advices that are for methods of the target bean.  
-
+So each proxy has chain of advices that are for methods of the target bean.   
+so first all advices are discovered and they are placed in appropriate proxies and inside appropriate chain before target method and order, this is what spring internally does.  
