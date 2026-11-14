@@ -408,6 +408,8 @@ public void log(){...}
 
 ### Types of PointCut expression Methods 
 
+<img src="images/types_in_pointcut.png" width="90%" height="90%">
+
 * execution - This expression is for selecting methods. * wildcard represents method name
 * within - This expression is for selecting a class whose all methods are targetted. * wildcard represents class name
 * @annotation -  Specify the annotation, all the methods with the annotation will be targetted. Method level targets 
