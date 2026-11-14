@@ -394,5 +394,78 @@ Usage of .. wildcard
 
 Eg:  `@Before("within(in.strikes.Service) && execution(* * (..))")`   (Means any retrurn type, targets all classes's methods, and any params inside Service)   
 
+
+### Best Practise for Long Pointcut expressions
+In some another class methods, use @PointCut and write expression and empty function Body 
+```java
+@PointCut("within(in.strikes.service..*)")
+public void publicServiceMethods() {}
+
+// use the Method name in place of pointcut in proxies
+ @Before("publicServiceMethods()")
+public void log(){...}
+```
+
 ### Types of PointCut expression Methods 
+
+* execution - This expression is for selecting methods. * wildcard represents method name
+* within - This expression is for selecting a class whose all methods are targetted. * wildcard represents class name
+* @annotation -  Specify the annotation, all the methods with the annotation will be targetted. Method level targets 
+  * `@annotation(jkr.jfr.TimeStamp)`
+* bean - Specify the Bean Name `bean("beanName")`
+
+### @WithIn and @Target
+  
+- @Before("@within(@Audit *)") - Annotation on class level, Checks annotation on the method's declaring class  
+- @Before("@target(@Audit *)") - Annotation on class level, Checks annotation the runtime object which called it.  
+
+<img src="images/within_and_target.png" height="90%" width="90%">    
+
+
+### args and @args
+
+- args(Student, Integer) - Method with matching args
+- @args(annotation_name) - Which ever parameter is passed say `process(Student student)` its class should contain Annotation annotation_name, here Student class should contain annotation_name
+```java
+@MyAnnotation
+class Student {}
+class Employee {}
+
+@Service
+class DemoService {
+    public void process(Student s) {}
+    public void process(Employee e) {}
+}
+
+class LoggingAspect {
+    @Before("@args(MyAnnotation)")
+    public void log() {
+        System.out.println("Argument class has MyAnnotation!");
+    }
+}
+
+demoService.process(new Student());  // Advice executes ✅
+demoService.process(new Employee()); // Advice doesn't execute ❌
+```
+
+### Target and This
+
+To understand them you should understand 2 types of proxy implementations  
+* CGLIB proxy (Defualt) (The proxy that extends parent class)
+* JDK dynamic proxy (The proxy that implements common interface, We should provide this interface and set this default)
+
+<img src="images/cglib.png" height="90%" width="90%">    
+target refers to actual method and this refers to proxy 
+
+<img src="images/jdk.png" height="90%" width="90%">    
+
+### We pass a ClassName to this and target   
+- `@Before("this(in.strikes.service.Student)")`. Is the proxy object type Student then run the proxy
+- `@Before("target(in.strikes.service.Student)")`. Is the target object type Student then run the proxy
+
+### The internal process
+* so spring does some thing like take all advices and places them in sutable proxies (Intercepting objects that are before target) and the object's type is setted based on jdk or cglib   
+* `spring.aop.proxy-target-class= false(JDK) / true (CGLIB) default`  
+* True alone is not enough, we should also provide interface with false i.e JDK, else still CGLIB is used even if its false.  
+* The main problem comes in this vs target is proxy is in CGLIB is studentService type (extending class) and in JDK its commonService type which is interface.
 
