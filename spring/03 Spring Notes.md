@@ -416,8 +416,8 @@ public void log(){...}
 
 ### @WithIn and @Target
   
-- @Before("@within(@Audit *)") - Annotation on class level, Checks annotation on the method's declaring class  
-- @Before("@target(@Audit *)") - Annotation on class level, Checks annotation the runtime object which called it.  
+- @Before("@within(Path to Annotation..)") - Annotation on class level, Checks annotation on the method's declaring class  
+- @Before("@target(Path to Annotation..)") - Annotation on class level, Checks annotation the runtime object which called it.  
 
 <img src="images/within_and_target.png" height="90%" width="90%">    
 
