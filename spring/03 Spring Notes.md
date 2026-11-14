@@ -469,3 +469,16 @@ target refers to actual method and this refers to proxy
 * True alone is not enough, we should also provide interface with false i.e JDK, else still CGLIB is used even if its false.  
 * The main problem comes in this vs target is proxy is in CGLIB is studentService type (extending class) and in JDK its commonService type which is interface.
 
+### Proxy per Target bean 
+The AOP is not limited to HTTP req cycle but when ever the target bean is called, proxy wraps the target bean.
+```text
+StudentService Proxy (ONE)
+       |
+       ├── save()   → Advice 1 → Advice 2 → Target
+       |
+       ├── update() → Advice 1 → Advice 3 → Target
+       |
+       └── delete() → Advice 2 → Target
+```
+So each proxy has chain of advices that are for methods of the target bean.  
+
