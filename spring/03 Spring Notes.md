@@ -475,12 +475,84 @@ target refers to actual method and this refers to proxy
 The AOP is not limited to HTTP req cycle but when ever the target bean is called, proxy wraps the target bean.
 ```text
 StudentService Proxy (ONE)
-       |
        ├── save()   → Advice 1 → Advice 2 → Target
-       |
        ├── update() → Advice 1 → Advice 3 → Target
-       |
        └── delete() → Advice 2 → Target
 ```
 So each proxy has chain of advices that are for methods of the target bean.   
-so first all advices are discovered and they are placed in appropriate proxies and inside appropriate chain before target method and order, this is what spring internally does.  
+so first all advices are discovered and they are placed in appropriate proxies (spring creates this proxy) and inside appropriate chain before target method and order, this is what spring internally does.  
+
+
+## Custom Annotations
+
+Structure of a custom annotation
+```java
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface ExecutionTime {
+    long timeLimit() default 1000;
+    String message() default "";
+}
+```
+
+- @Target tells on where this annotation is applicable - method, constructor, class level etc (default is everything)
+- @Retention means how long to remember the annotation.
+- @Retention we have,
+    - Source: only in code level and after compilation there is no trace of annotation left
+    - Class: is for some testing  tool purpose to test something on byte code level (not required to go further),  its information will be there in bytecode but spring cannot access it (not available at Runtime),
+    - Runtime: is where spring can access the information weather in Interceptors, creating aspects etc.
+- @Documented is for javadoc tool that documents the annotations
+- @interface is special syntax for creating annotations
+- Time Limit and Mesage are like fields (called Annotation Members) in Method syntax
+```java
+@ExecutionTime(timeLimit = 0, message = "Testing Purpose")
+```
+
+They are accessable in Aspects    
+Recap : Before, After, AfterThrowing, AfterReturning are all read only i.e cannot modify request or consume the response. Around has the overall control.  
+
+```java
+@Aspect
+@Component
+public class ExecutionTimeAspect {
+
+    @Around("@annotation(executionTime)")
+    public Object getExecutionTime(ProceedingJoinPoint joinPoint, ExecutionTime executionTime) throws Throwable {
+         long start = System.currentTimeMillis();
+         try{
+             return joinPoint.proceed();
+         }finally {
+             long end = System.currentTimeMillis() - start;
+             System.out.println("Time Taken by Method " + joinPoint.getSignature().getName() + " " + end +"ms");
+
+            if(end >= executionTime.timeLimit()){
+                System.out.println("Time Limit Exceeded on Method " + joinPoint.getSignature().getName() + " " + executionTime.message());
+            }
+         }
+    }
+}
+```
+
+### Insights in Bean Life
+
+1. Read Bean Definitions
+2. Create/Instantiate Object
+3. Inject Dependencies
+4. Run Aware Interfaces
+5. Run BeanPostProcessors before initialization callbacks
+6. Initialization callbacks (@PostConstruct)
+7. Run BeanPostProcessors after initialization callbacks
+8. Store Bean Reference
+
+BeanPostProcessors is Spring Interface it contains 
+- postProcessBeforeInterface()
+- postProcessAfterInterface()
+
+### Use of postProcessAfterInterface
+Is there any necessity of creation of proxy (are there any aspects for any methods)? Yes -> Bean is wrapped in proxy and proxy is returned, else bean is returned.   
+<img src="images/bean_postprocess.png" height="90%" width="90%">  
+This is how Spring creates proxy, And this proxy (Which wraps the bean) is stored in IOC and used for autowiring whenever there is requirement of bean. 
+
+### Use of postProcessBeforeInterface
+This before is for initial configurations, just to make the bean ready and some steps before @PostConstruct callback (Not quite used can ignore this..)
