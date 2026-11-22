@@ -69,11 +69,11 @@ Main/Core Problems :
 * Understanding the HTTP request (Metod, Path, Headers, Body) its just a stream, i.e String
 * Mapping Route to Correct Method. Huge Else if Ladder
 
-<img src="images/corejava.png">
+<img src="images/corejava.png" width="90%" height="90%">
 
 ### Problems when Core Java
 
-<img src="images/javaproblems.png" >
+<img src="images/javaproblems.png" width="70%" height="70%">
 
 ### Servlets and Beans  
 before servlet and servlet container, servlets are special java class objects whom servlet container manages and invokes upon a request. This idea of Inversion of control leads to spring IOC container and beans.  
@@ -81,11 +81,11 @@ before servlet and servlet container, servlets are special java class objects wh
 * Servlet container creates, manages, Invokes servlets, manages their life cycle (init(), service and inside doGet() etc, destroy())
 * Insted of you controlling (creating, Invoking, destroying) the servlet The control is Inversed to Tomcat.
 
-<img src="images/servletcontainer1.png" width="100%" height="100%">
+<img src="images/servletcontainer1.png" width="90%" height="90%">
 
 Beans and servlets are similar cuz both are created and managed by servlet container/spring. And to reduce further tight coupling Dependency injection is added. in evolution of servlet & servlet container to spring core.  
 
-<img src="images/beans_servlets.png" width="100%" height="100%">
+<img src="images/beans_servlets.png" width="90%" height="90%">
 
 ## JAR vs WAR ( Java Archives vs Web Archives )
 
@@ -97,7 +97,7 @@ Simple JAR is similar to WAR but JAR can be Executable JAR that can contains you
 We can deploy more than one application in external tomcat and to communicate the route is 
 `http://localhost:8080/app-name/route-starts-here`
 
-<img src="images/tomcat_app.png" width="100%" height="100%">
+<img src="images/tomcat_app.png" width="90%" height="90%">
 * This External tomcat upons request calls init() initially (similar to @PostConstruct)
 * Then service() which internally resolves to some method like doGet, doPost etc.
 * Then destroy() is called similar to @PreDestroy
@@ -171,7 +171,7 @@ Servlet container does a lot of work to reduce boiler plate, Tightly coupled cod
 *  converting request body to object it needs Jackson bean (understand spring auto configured beans and normal as well).
 * Spring placed a dispatcher servlet and introduced controllers.
 
-<img src="images/dispatcher_servlet.png" width="100%" height="100%">
+<img src="images/dispatcher_servlet.png" width="90%" height="90%">
 
 * Its Like Tomcat manages (Parsing) Reqest to HttpServletRequest and forwards to Dispatcher servlet and same for response.   
 * Dispacher Servlet manages HttpServletRq to Objects,Forwarding to correct controller (before tomcat does this in servlets) and Generating JSON response from spring response.  
@@ -238,13 +238,13 @@ We get embedded in spring-boot-starter-web dependency, when we do `SpringApplica
 This is actual web framework that uses spring core To Manage web applications, core spring gives Base framework, the ideology.  
 @Beans, Dependency Injection, IOC container and Spring MVC gives extra functionality for web apps like, @Controllers, @Service, and web related functionality.  
 
-<img src="images/springmvc.png" width="100%" height="100%">
+<img src="images/springmvc.png" width="90%" height="90%">
 
 You can build everything using only servlets but the boilerplate of class UserServlet { doGet(HttpServletRequest,HttpServletResponse) etc.} to eliminate this servlets and insted controllers are used.
 
 ### Handler Mapping 
  * handler mapping it scans all beans and their annotatiions, creates route to method mapping and helps dispatcher servlet to call correct bean.  
-<img src="images/handlermapping.png" width="100%" height="100%">
+<img src="images/handlermapping.png" width="90%" height="90%">
 
 ### Data is extracted/resolved in requests
 * Request Body is extracted by dispatcher servlet via Jackson Library JSON <-> java object mapping and provides controllers.
@@ -253,7 +253,7 @@ You can build everything using only servlets but the boilerplate of class UserSe
 
 
 From creating of HttpservletRequest from raw string by tomcat, Later Dispatcher servlet takes those objects gets method mapping and resolution values from HandlerMapping for @Path variable. it can do like use jackson to convert json <-> java object later validations and exceptions as well, the dispacther servlet Fills the required arguments of controllers.  
-<img src="images/springworkflow.png" width="100%" height="100%">
+<img src="images/springworkflow.png" width="90%" height="90%">
 
 ### Request Flow and Response Flow
 
@@ -469,7 +469,7 @@ Rules Include :
 ### What Happens when you define exception handler and when you dont.
 When You dont define the exception will propagate from service back to controller and reach spring dispatcher servlet and it will sent genric response for your exception.   
 When you define  
-<img src="images/exceptionhandlingflow.png" width="100%" height="100%">  
+<img src="images/exceptionhandlingflow.png" width="90%" height="90%">  
 From service it goes to global exception handler and response to user is sent from there. Exception will not got back to controller.  
 
 Tips :   
@@ -505,6 +505,85 @@ error - HttpStatus.NOT_FOUND.getReasonPhrase()
 message - ex.getMessage() (from Exception ex)  
 path -  request.getRequestURI ( from HttpServletRequest request)  
 ```
+
+```java
+public class ExceptionResponseDto {
+
+    private LocalDateTime timestamp;
+    private int statusCode;
+    private String error;
+    private String message;
+    private String path;
+
+    public ExceptionResponseDto(LocalDateTime timestamp, int statusCode, String error, String message, String path) {
+        this.timestamp = timestamp;
+        this.statusCode = statusCode;
+        this.error = error;
+        this.message = message;
+        this.path = path;
+    }
+}
+```
+### Sample code for Global Exception Handler
+```java
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ExceptionResponseDto> handleResourceNotFoundException(
+            ResourceNotFoundException ex, HttpServletRequest request) {
+
+        ExceptionResponseDto exceptionResponse = new ExceptionResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(exceptionResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ValidationExceptionResponseDto> handleDMethodArgumentNotValidException(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        Map<String, String> fieldErrors = new HashMap<>();
+
+        ex.getBindingResult().getFieldErrors()
+                .forEach(error ->
+                        fieldErrors.put(error.getField(), error.getDefaultMessage()));
+
+        ValidationExceptionResponseDto exceptionResponse = new ValidationExceptionResponseDto(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                "Validation Failed",
+                request.getRequestURI(),
+                fieldErrors
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(exceptionResponse);
+    }
+  // we have Here for Exception class that returns 500 Internal Server Error
+}
+
+
+// ValidationExceptionResponseDto
+public class ValidationExceptionResponseDto {
+    private LocalDateTime timestamp;
+    private int statusCode;
+    private String error;
+    private String message;
+    private String path;
+    private Map<String, String> fieldErrors;
+}
+```
+
 ### When Sending All errors in validation
 ```text
 So when we use MethodArgumentNotValid ex when @Valid fails     
