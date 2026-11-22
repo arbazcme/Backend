@@ -500,7 +500,7 @@ public @interface ExecutionTime {
 - @Retention means how long to remember the annotation.
 - @Retention we have,
     - Source: only in code level and after compilation there is no trace of annotation left
-    - Class: is for some testing  tool purpose to test something on byte code level (not required to go further),  its information will be there in bytecode but spring cannot access it (not available at Runtime),
+    - Class: annotation metadata is retained in bytecode without being available through runtime reflection. is for some testing tool purpose to test something on byte code level (not required to go further),  its information will be there in bytecode but spring cannot access it (not available at Runtime).
     - Runtime: is where spring can access the information weather in Interceptors, creating aspects etc.
 - @Documented is for javadoc tool that documents the annotations
 - @interface is special syntax for creating annotations
